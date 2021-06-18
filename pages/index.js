@@ -20,8 +20,8 @@ import * as tf from "@tensorflow/tfjs";
 
 import {getSortedPostsData} from '../lib/posts'
 
-import { indexToString } from '../utils/indexToString';
-import { stringToIndex } from '../utils/stringToIndex';
+import indexToString from '../utils/indexToString';
+import stringToIndex from '../utils/stringToIndex';
 
 export async function getStaticProps() {
     const allPostsData = getSortedPostsData()
@@ -53,18 +53,19 @@ export default function Home({allPostsData}) {
     let randomNumber = [];
 
     useEffect(() => {
-        tf.ready().then(() => {
-            loadModel()
+        tf.ready().then(async () => {
+            model = await tf.loadLayersModel('/model/model.json');
+            // loadModel()
         });
     }, [])
 
     async function loadModel() {
         try {
-            model = await tf.loadLayersModel('/model/model.json');
+
             // model.summary();
 
             console.log("Load model success")
-            await predictWord("hello my name is".trim(), 5).then(value => console.log(value))
+            await predictWord("Zweite und dritte".trim(), 5).then(value => console.log(value))
         } catch (err) {
             console.log(err);
         }
@@ -173,7 +174,7 @@ export default function Home({allPostsData}) {
             </AppBar>
 
             <div className={utilStyles.content}>
-                <Button variant="contained" color="primary" className={utilStyles.funcButton}> Wert
+                <Button variant="contained" color="primary" className={utilStyles.funcButton} onClick={loadModel}> Wert
                     vorhersagen</Button>
                 <div className={utilStyles.horizontalImages}>
                     <TextField id="userInput" label="User Input" type="number" variant="outlined"
