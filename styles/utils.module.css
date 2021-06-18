@@ -50,3 +50,41 @@
 .lightText {
     color: #666;
 }
+.root {
+    /*flexGrow: 1,*/
+}
+.title {
+    /*flexGrow: 1;*/
+    color: #fff;
+}
+.AppBar {
+    background: #607d8b
+}
+.DokuButton {
+    marginRight: 750;
+    color: #ffffff;
+}
+.content {
+    marginLeft: 100;
+    marginRight: 100;
+    marginTop: 100;
+    display: flex;
+    flexDirection: column;
+    width: 400px;
+    height: 100vh;
+}
+.horizontalImages {
+    display: flex;
+    flexDirection: row
+}
+.funcButton {
+    width: fit-content;
+    marginTop: 10;
+    marginBottom: 10
+}
+.table {
+    width: 250px;
+}
+.prediction {
+    marginLeft: 20
+}
