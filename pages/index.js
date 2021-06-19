@@ -1,16 +1,12 @@
-import Head from 'next/head'
-import Layout, {siteTitle} from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
 import React, {useEffect, useRef} from "react";
 
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import Toolbar from "@material-ui/core/Toolbar";
@@ -18,19 +14,10 @@ import Typography from "@material-ui/core/Typography";
 import AppBar from "@material-ui/core/AppBar";
 import * as tf from "@tensorflow/tfjs";
 
-import {getSortedPostsData} from '../lib/posts'
 
 import indexToString from '../utils/indexToString';
 import stringToIndex from '../utils/stringToIndex';
-
-export async function getStaticProps() {
-    const allPostsData = getSortedPostsData()
-    return {
-        props: {
-            allPostsData
-        }
-    }
-}
+import Link from "next/link";
 
 function createData(name, value) {
     return {name, value};
@@ -41,10 +28,10 @@ const rows = [
     createData('Optimizer', "Adam"),
     createData('Learning Rate', 0.001),
     createData('Epochs', 20),
-    createData('Loss', "MSE"),
+    createData('Loss', "categorical_crossentropy"),
     createData('Training Data size', 500)
 ];
-export default function Home({allPostsData}) {
+export default function Home() {
     const userInputValueRef = useRef(0)
     const predictionValueRef = useRef()
     let isQuestion = false;
@@ -55,17 +42,18 @@ export default function Home({allPostsData}) {
     useEffect(() => {
         tf.ready().then(async () => {
             model = await tf.loadLayersModel('/model/model.json');
-            // loadModel()
-        });
-    }, [])
-
-    async function loadModel() {
-        try {
-
-            // model.summary();
-
             console.log("Load model success")
-            await predictWord("Zweite und dritte".trim(), 5).then(value => console.log(value))
+
+        });
+    }, [model])
+
+    async function executePrediction() {
+        try {
+            let value = userInputValueRef.current.value;
+            await predictWord(value.trim(), 5).then(value => {
+                console.log(value);
+                predictionValueRef.current.value = value.join(",")
+            })
         } catch (err) {
             console.log(err);
         }
@@ -93,10 +81,9 @@ export default function Home({allPostsData}) {
                 (NUMBER_OF_WORDS - 1) * 1e4,
                 NUMBER_OF_WORDS * 1e4
             );
-            let predictionString = indexToWordConverter(
+            return indexToWordConverter(
                 await doArgMax(lastWordPrediction, numPrediction)
             );
-            return predictionString;
         } else {
             // notice.style.display = 'block';
         }
@@ -167,17 +154,21 @@ export default function Home({allPostsData}) {
                     <Typography variant="h6" className={utilStyles.title}>
                         Deep Learning - André Schwarz
                     </Typography>
-                    {/*<Link to="/documentation">*/}
-                    {/*    <Button color="primary" className={utilStyles.DokuButton}>Aufgabe 3 - Zur Dokumentation</Button>*/}
+                    <Button color="primary" className={utilStyles.DokuButton}>
+                        <Link href="/documentation">
+                            <a>Aufgabe 4 - Zur Dokumentation</a>
+                        </Link>
+                    </Button>
                     {/*</Link>*/}
                 </Toolbar>
             </AppBar>
 
             <div className={utilStyles.content}>
-                <Button variant="contained" color="primary" className={utilStyles.funcButton} onClick={loadModel}> Wert
+                <Button variant="contained" color="primary" className={utilStyles.funcButton}
+                        onClick={executePrediction}> Wert
                     vorhersagen</Button>
                 <div className={utilStyles.horizontalImages}>
-                    <TextField id="userInput" label="User Input" type="number" variant="outlined"
+                    <TextField id="userInput" label="User Input" type="text" variant="outlined"
                                inputRef={userInputValueRef}/>
                     <TextField
                         id="prediction"
@@ -196,12 +187,6 @@ export default function Home({allPostsData}) {
 
                 <TableContainer component={Paper} className={utilStyles.table}>
                     <Table aria-label="simple table">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Dessert (100g serving)</TableCell>
-                                <TableCell align="right">Value</TableCell>
-                            </TableRow>
-                        </TableHead>
                         <TableBody>
                             {rows.map((row) => (
                                 <TableRow key={row.name}>
