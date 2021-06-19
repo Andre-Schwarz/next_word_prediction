@@ -1,5 +1,5 @@
 import utilStyles from '../styles/utils.module.css'
-import React, {useEffect, useRef} from "react";
+import React, {useState, useEffect, useRef} from "react";
 
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
@@ -13,11 +13,18 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import AppBar from "@material-ui/core/AppBar";
 import * as tf from "@tensorflow/tfjs";
-
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import Divider from '@material-ui/core/Divider';
+import InboxIcon from '@material-ui/icons/Inbox';
+import DraftsIcon from '@material-ui/icons/Drafts';
 
 import indexToString from '../utils/indexToString';
 import stringToIndex from '../utils/stringToIndex';
 import Link from "next/link";
+import {renderIntoDocument} from "react-dom/test-utils";
 
 function createData(name, value) {
     return {name, value};
@@ -31,9 +38,13 @@ const rows = [
     createData('Loss', "categorical_crossentropy"),
     createData('Training Data size', 500)
 ];
+
+
 export default function Home() {
     const userInputValueRef = useRef(0)
     const predictionValueRef = useRef()
+    const [predictions, setPredictions] = useState(["TEST"]);
+
     let isQuestion = false;
     const NUMBER_OF_WORDS = 3;
     let model;
@@ -47,12 +58,20 @@ export default function Home() {
         });
     }, [model])
 
+
+    function addPredictionToUserInput(prediction) {
+        let value = userInputValueRef.current.value;
+
+        userInputValueRef.current.value = value + " " + prediction
+    }
+
     async function executePrediction() {
         try {
             let value = userInputValueRef.current.value;
             await predictWord(value.trim(), 5).then(value => {
                 console.log(value);
-                predictionValueRef.current.value = value.join(",")
+                predictionValueRef.current.value = value
+                setPredictions(value)
             })
         } catch (err) {
             console.log(err);
@@ -74,8 +93,7 @@ export default function Home() {
         sentence = sentence.toLowerCase().split(' ');
         let indexes = wordToIndexConverter(sentence);
         if (indexes.length >= NUMBER_OF_WORDS) {
-            // notice.style.display = 'none';
-            indexes = indexes.slice(-NUMBER_OF_WORDS);
+            indexes = indexes.slice(-NUMBER_OF_WORDS); // take the last 3 values
             const prediction = await model.predict(tf.tensor([indexes]));
             const lastWordPrediction = (await prediction.data()).slice(
                 (NUMBER_OF_WORDS - 1) * 1e4,
@@ -85,7 +103,7 @@ export default function Home() {
                 await doArgMax(lastWordPrediction, numPrediction)
             );
         } else {
-            // notice.style.display = 'block';
+            // TODO handle tooo less words
         }
     }
 
@@ -181,9 +199,8 @@ export default function Home() {
 
                 </div>
 
-                <Button color="primary"
-                        className={utilStyles.funcButton}>Modellerstellung
-                    neustarten</Button>
+                {/*<Button color="primary"*/}
+                {/*        className={utilStyles.funcButton}>Modellerstellung neustarten</Button>*/}
 
                 <TableContainer component={Paper} className={utilStyles.table}>
                     <Table aria-label="simple table">
@@ -199,6 +216,17 @@ export default function Home() {
                         </TableBody>
                     </Table>
                 </TableContainer>
+
+                <List component="nav" aria-label="main mailbox folders">
+                    {predictions.map((prediction) => (
+                        <ListItem onClick={addPredictionToUserInput(prediction)}>
+                            <ListItemIcon>
+                                <InboxIcon/>
+                            </ListItemIcon>
+                            <ListItemText primary={prediction}/>
+                        </ListItem>
+                    ))}
+                </List>
             </div>
         </div>
     )
