@@ -19,33 +19,23 @@ import indexToString from '../utils/indexToString';
 import stringToIndex from '../utils/stringToIndex';
 import Link from "next/link";
 
-
 export default function Home() {
     const userInputValueRef = useRef("")
-    const predictionValueRef = useRef()
-    const [predictions, setPredictions] = useState(["TEST"]);
-    // const [userInput, setUserInput] = useState("")
+    const [predictions, setPredictions] = useState([""]);
 
     const onChangeHandler = event => {
         let value = event.target.value
         value = value.toLowerCase().split(' ').filter(value1 => value1 != "")
-        // setUserInput(value)
         console.log(value)
 
-        if (value.length >= 3) {
+        if (value.length >= NUMBER_OF_WORDS) {
             console.log("greater = 3")
-
             executePrediction(value)
         }
-
-
     }
 
-
-    let isQuestion = false;
     const NUMBER_OF_WORDS = 3;
     let model;
-    let randomNumber = [];
 
     useEffect(() => {
         tf.ready().then(async () => {
@@ -54,8 +44,9 @@ export default function Home() {
         });
     }, [model])
 
-
     function addPredictionToUserInput(prediction) {
+        console.log("add prediction to user input")
+
         let value = userInputValueRef.current.value;
 
         // userInputValueRef.current.value = value + " " + prediction
@@ -63,10 +54,8 @@ export default function Home() {
 
     async function executePrediction(value) {
         try {
-            // let value = userInputValueRef.current.value;
             await predictWord(value, 5).then(value => {
                 console.log(value);
-                // predictionValueRef.current.value = value
                 setPredictions(value)
             })
         } catch (err) {
@@ -85,42 +74,40 @@ export default function Home() {
     };
 
     async function predictWord(sentence, numPrediction) {
-        // isQuestion = false;
-        // sentence = sentence.toLowerCase().split(' ');
         let indexes = wordToIndexConverter(sentence);
-        if (indexes.length >= NUMBER_OF_WORDS) {
-            indexes = indexes.slice(-NUMBER_OF_WORDS); // take the last 3 values
+
+        console.log(indexes)
+
+        async function executePrediction() {
             const prediction = await model.predict(tf.tensor([indexes]));
-            const lastWordPrediction = (await prediction.data()).slice(
-                (NUMBER_OF_WORDS - 1) * 1e4,
-                NUMBER_OF_WORDS * 1e4
-            );
+            const lastWordPrediction = (await prediction.data())
             return indexToWordConverter(
                 await doArgMax(lastWordPrediction, numPrediction)
             );
-        } else {
-            // TODO handle tooo less words
+        }
+
+        if (indexes.length >= NUMBER_OF_WORDS) {
+            indexes = indexes.slice(-NUMBER_OF_WORDS); // take the last 3 values
+
+            if (model === undefined) {
+                console.log("reload model")
+                tf.ready().then(async () => {
+                    model = await tf.loadLayersModel('/model/model.json');
+                    console.log("Load model success")
+                    return await executePrediction();
+                });
+            } else {
+                return await executePrediction();
+            }
         }
     }
 
     const indexToWordConverter = arrOfIndexes => {
         let arrOfStrings = [];
+        console.log("index array", arrOfIndexes)
         arrOfIndexes.forEach(index => {
             let word = indexToString[index];
-            if (word === '<eos>') {
-                if (isQuestion) {
-                    word = '?';
-                } else {
-                    word = '.';
-                }
-            }
-            if (word === 'N') {
-                randomNumber.push(Math.floor(1e3 * Math.random()));
-                word = randomNumber[Math.floor(Math.random() * randomNumber.length)];
-            }
-            if (word === '<unk>') {
-                word = 'rareword';
-            }
+            console.log("word", word)
             arrOfStrings.push(word);
         });
         return arrOfStrings;
@@ -129,32 +116,8 @@ export default function Home() {
     const wordToIndexConverter = arrOfString => {
         let arrOfIndexes = [];
         arrOfString.forEach(word => {
-            if (word === 'rareword') {
-                word = '<unk>';
-            }
-            if (randomNumber.includes(Number(word))) {
-                word = 'N';
-            }
-            if (
-                'what' === word ||
-                'why' === word ||
-                'who' === word ||
-                'how' === word ||
-                'whose' === word ||
-                'when' === word ||
-                'whom' === word ||
-                'which' === word ||
-                'where' === word
-            ) {
-                isQuestion = true;
-            }
-            if (word === '.' || word === '?') {
-                word = '<eos>';
-            }
             let index = stringToIndex[word];
-            if (index === undefined) {
-                arrOfIndexes.push(1); // 1 = '<unk>'
-            } else {
+            if (index !== undefined) {
                 arrOfIndexes.push(index);
             }
         });
@@ -192,26 +155,13 @@ export default function Home() {
                 <p>
                     Bitte geben Sie mindestens 3 Wörter in englischer Sprache ein, um die Wortvorhersage zu starten.
                 </p>
-                {/*<div className={utilStyles.horizontalImages}>*/}
+
                 <div>
                     <TextField id="userInput" label="Geben Sie hier mindestens 3 englische Wörter ein" type="text"
                                variant="outlined"
                                className={utilStyles.userInput}
-
-                        // inputRef={measuredRef}
                                onChange={onChangeHandler}
-                        // value={userInput}
                     />
-
-                    {/*<TextField*/}
-                    {/*    id="prediction"*/}
-                    {/*    InputProps={{*/}
-                    {/*        readOnly: true,*/}
-                    {/*    }}*/}
-                    {/*    className={utilStyles.prediction}*/}
-                    {/*    inputRef={predictionValueRef}*/}
-                    {/*/>*/}
-
                 </div>
 
                 {(predictions.length > 0) ?
@@ -222,7 +172,7 @@ export default function Home() {
 
                 <List component="nav" aria-label="main mailbox folders">
                     {predictions.map((prediction) => (
-                        <ListItem onClick={addPredictionToUserInput(prediction)}>
+                        <ListItem key={prediction}>
                             <ListItemIcon>
                                 <InboxIcon/>
                             </ListItemIcon>
