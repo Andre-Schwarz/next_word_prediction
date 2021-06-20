@@ -1,5 +1,5 @@
 import utilStyles from '../styles/utils.module.css'
-import React, {useState, useEffect, useRef} from "react";
+import React, {useState, useEffect, useRef, useCallback} from "react";
 
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
@@ -24,6 +24,23 @@ export default function Home() {
     const userInputValueRef = useRef("")
     const predictionValueRef = useRef()
     const [predictions, setPredictions] = useState(["TEST"]);
+    // const [userInput, setUserInput] = useState("")
+
+    const onChangeHandler = event => {
+        let value = event.target.value
+        value = value.toLowerCase().split(' ').filter(value1 => value1 != "")
+        // setUserInput(value)
+        console.log(value)
+
+        if (value.length >= 3) {
+            console.log("greater = 3")
+
+            executePrediction(value)
+        }
+
+
+    }
+
 
     let isQuestion = false;
     const NUMBER_OF_WORDS = 3;
@@ -44,12 +61,12 @@ export default function Home() {
         // userInputValueRef.current.value = value + " " + prediction
     }
 
-    async function executePrediction() {
+    async function executePrediction(value) {
         try {
-            let value = userInputValueRef.current.value;
-            await predictWord(value.trim(), 5).then(value => {
+            // let value = userInputValueRef.current.value;
+            await predictWord(value, 5).then(value => {
                 console.log(value);
-                predictionValueRef.current.value = value
+                // predictionValueRef.current.value = value
                 setPredictions(value)
             })
         } catch (err) {
@@ -69,7 +86,7 @@ export default function Home() {
 
     async function predictWord(sentence, numPrediction) {
         // isQuestion = false;
-        sentence = sentence.toLowerCase().split(' ');
+        // sentence = sentence.toLowerCase().split(' ');
         let indexes = wordToIndexConverter(sentence);
         if (indexes.length >= NUMBER_OF_WORDS) {
             indexes = indexes.slice(-NUMBER_OF_WORDS); // take the last 3 values
@@ -181,7 +198,10 @@ export default function Home() {
                                variant="outlined"
                                className={utilStyles.userInput}
 
-                               inputRef={userInputValueRef}/>
+                        // inputRef={measuredRef}
+                               onChange={onChangeHandler}
+                        // value={userInput}
+                    />
 
                     {/*<TextField*/}
                     {/*    id="prediction"*/}
@@ -199,7 +219,6 @@ export default function Home() {
                         Vorhersageergebnisse:
                     </p>
                     : null}
-
 
                 <List component="nav" aria-label="main mailbox folders">
                     {predictions.map((prediction) => (
