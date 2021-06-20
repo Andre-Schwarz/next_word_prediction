@@ -21,7 +21,7 @@ import Link from "next/link";
 
 export default function Home() {
     const userInputValueRef = useRef("")
-    const [predictions, setPredictions] = useState([""]);
+    const [predictions, setPredictions] = useState([]);
 
     const onChangeHandler = event => {
         let value = event.target.value
@@ -31,6 +31,8 @@ export default function Home() {
         if (value.length >= NUMBER_OF_WORDS) {
             console.log("greater = 3")
             executePrediction(value)
+        } else {
+            setPredictions([])
         }
     }
 
@@ -56,7 +58,7 @@ export default function Home() {
         try {
             await predictWord(value, 5).then(value => {
                 console.log(value);
-                setPredictions(value)
+                setPredictions(value.filter(value1 => value1 !== undefined))
             })
         } catch (err) {
             console.log(err);
@@ -80,7 +82,10 @@ export default function Home() {
 
         async function executePrediction() {
             const prediction = await model.predict(tf.tensor([indexes]));
-            const lastWordPrediction = (await prediction.data())
+            const lastWordPrediction = (await prediction.data()).slice(
+                0,
+                8071
+            );
             return indexToWordConverter(
                 await doArgMax(lastWordPrediction, numPrediction)
             );

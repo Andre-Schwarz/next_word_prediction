@@ -73,6 +73,15 @@
     width: 400px;
     height: 100vh;
 }
+.documentation {
+    margin-left: 100px;
+    margin-right: 100px;
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+    width: 800px;
+    height: 100vh;
+}
 .horizontalImages {
     display: flex;
     flex-direction: row
