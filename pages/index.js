@@ -22,6 +22,8 @@ import Link from "next/link";
 export default function Home() {
     const userInputValueRef = useRef("")
     const [predictions, setPredictions] = useState([]);
+    const NUMBER_OF_WORDS = 3;
+    let model;
 
     const onChangeHandler = event => {
         let value = event.target.value
@@ -36,23 +38,12 @@ export default function Home() {
         }
     }
 
-    const NUMBER_OF_WORDS = 3;
-    let model;
-
     useEffect(() => {
         tf.ready().then(async () => {
             model = await tf.loadLayersModel('/model/model.json');
             console.log("Load model success")
         });
     }, [model])
-
-    function addPredictionToUserInput(prediction) {
-        console.log("add prediction to user input")
-
-        let value = userInputValueRef.current.value;
-
-        // userInputValueRef.current.value = value + " " + prediction
-    }
 
     async function executePrediction(value) {
         try {
@@ -109,10 +100,8 @@ export default function Home() {
 
     const indexToWordConverter = arrOfIndexes => {
         let arrOfStrings = [];
-        console.log("index array", arrOfIndexes)
         arrOfIndexes.forEach(index => {
             let word = indexToString[index];
-            console.log("word", word)
             arrOfStrings.push(word);
         });
         return arrOfStrings;
@@ -150,9 +139,6 @@ export default function Home() {
                     Next Word Prediction
                 </h2>
 
-                <Button variant="contained" color="primary" className={utilStyles.funcButton}
-                        onClick={executePrediction}> Wert
-                    vorhersagen</Button>
                 <p>
                     Willkommen zur Next Word Prediction auf Basis des Buches "The Adventures of Sherlock Holmes, by
                     Arthur Conan Doyle"
