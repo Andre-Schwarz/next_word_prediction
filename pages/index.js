@@ -3,12 +3,7 @@ import React, {useState, useEffect, useRef} from "react";
 
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
+
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import AppBar from "@material-ui/core/AppBar";
@@ -17,31 +12,16 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import Divider from '@material-ui/core/Divider';
+
 import InboxIcon from '@material-ui/icons/Inbox';
-import DraftsIcon from '@material-ui/icons/Drafts';
 
 import indexToString from '../utils/indexToString';
 import stringToIndex from '../utils/stringToIndex';
 import Link from "next/link";
-import {renderIntoDocument} from "react-dom/test-utils";
-
-function createData(name, value) {
-    return {name, value};
-}
-
-const rows = [
-    createData('Batch Size', 32),
-    createData('Optimizer', "Adam"),
-    createData('Learning Rate', 0.001),
-    createData('Epochs', 20),
-    createData('Loss', "categorical_crossentropy"),
-    createData('Training Data size', 500)
-];
 
 
 export default function Home() {
-    const userInputValueRef = useRef(0)
+    const userInputValueRef = useRef("")
     const predictionValueRef = useRef()
     const [predictions, setPredictions] = useState(["TEST"]);
 
@@ -54,7 +34,6 @@ export default function Home() {
         tf.ready().then(async () => {
             model = await tf.loadLayersModel('/model/model.json');
             console.log("Load model success")
-
         });
     }, [model])
 
@@ -62,7 +41,7 @@ export default function Home() {
     function addPredictionToUserInput(prediction) {
         let value = userInputValueRef.current.value;
 
-        userInputValueRef.current.value = value + " " + prediction
+        // userInputValueRef.current.value = value + " " + prediction
     }
 
     async function executePrediction() {
@@ -182,40 +161,45 @@ export default function Home() {
             </AppBar>
 
             <div className={utilStyles.content}>
+                <h2>
+                    Next Word Prediction
+                </h2>
+
                 <Button variant="contained" color="primary" className={utilStyles.funcButton}
                         onClick={executePrediction}> Wert
                     vorhersagen</Button>
-                <div className={utilStyles.horizontalImages}>
-                    <TextField id="userInput" label="User Input" type="text" variant="outlined"
+                <p>
+                    Willkommen zur Next Word Prediction auf Basis des Buches "The Adventures of Sherlock Holmes, by
+                    Arthur Conan Doyle"
+                </p>
+                <p>
+                    Bitte geben Sie mindestens 3 Wörter in englischer Sprache ein, um die Wortvorhersage zu starten.
+                </p>
+                {/*<div className={utilStyles.horizontalImages}>*/}
+                <div>
+                    <TextField id="userInput" label="Geben Sie hier mindestens 3 englische Wörter ein" type="text"
+                               variant="outlined"
+                               className={utilStyles.userInput}
+
                                inputRef={userInputValueRef}/>
-                    <TextField
-                        id="prediction"
-                        InputProps={{
-                            readOnly: true,
-                        }}
-                        className={utilStyles.prediction}
-                        inputRef={predictionValueRef}
-                    />
+
+                    {/*<TextField*/}
+                    {/*    id="prediction"*/}
+                    {/*    InputProps={{*/}
+                    {/*        readOnly: true,*/}
+                    {/*    }}*/}
+                    {/*    className={utilStyles.prediction}*/}
+                    {/*    inputRef={predictionValueRef}*/}
+                    {/*/>*/}
 
                 </div>
 
-                {/*<Button color="primary"*/}
-                {/*        className={utilStyles.funcButton}>Modellerstellung neustarten</Button>*/}
+                {(predictions.length > 0) ?
+                    <p>
+                        Vorhersageergebnisse:
+                    </p>
+                    : null}
 
-                <TableContainer component={Paper} className={utilStyles.table}>
-                    <Table aria-label="simple table">
-                        <TableBody>
-                            {rows.map((row) => (
-                                <TableRow key={row.name}>
-                                    <TableCell component="th" scope="row">
-                                        {row.name}
-                                    </TableCell>
-                                    <TableCell align="right">{row.value}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
 
                 <List component="nav" aria-label="main mailbox folders">
                     {predictions.map((prediction) => (
